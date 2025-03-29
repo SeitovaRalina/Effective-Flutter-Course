@@ -1,3 +1,3 @@
-# effective_flutter_course
+# Effective Flutter Course
 
-A new Flutter project.
+Это мобильное приложение для кофейни, разработанное в рамках лабораторных работ курса Flutter Академии Effective.
