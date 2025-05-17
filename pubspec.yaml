@@ -22,3 +22,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
+  assets:
+   - assets/images/placeholder.png
+   - assets/images/tea.png
+   - assets/images/authors_drink.png
+   - assets/images/black_coffee.png
+   - assets/images/coffee_with_milk.png
