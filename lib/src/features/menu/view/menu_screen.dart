@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import '../../../theme/app_colors.dart';
 import '../data/category_repository.dart';
 import '../data/menu_repository.dart';
@@ -13,94 +12,91 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  final ScrollController _menuScrollController = ScrollController();
-  final ScrollController _categoriesScrollController = ScrollController();
-  final GlobalKey _categoriesKey = GlobalKey();
-  final Map<int, GlobalKey> _categoryKeys = {};
+  final ScrollController _verticalScrollController = ScrollController();
+  final ScrollController _horizontalScrollController = ScrollController();
+  final Map<int, GlobalKey> _categorySliverKeys = {};
+  final Map<int, GlobalKey> _categoryButtonKeys = {};
+  bool _isJumpingToCategory = false;
+
   int _activeCategory = 0;
 
   @override
   void initState() {
     super.initState();
-    _initializeCategoryKeys();
-    _menuScrollController.addListener(_onMenuScroll);
-  }
-
-  void _initializeCategoryKeys() {
     for (var category in categories) {
-      _categoryKeys[category.id] = GlobalKey();
+      _categorySliverKeys[category.id] = GlobalKey();
+      _categoryButtonKeys[category.id] = GlobalKey();
     }
+    _verticalScrollController.addListener(_onMenuScroll);
   }
 
   @override
   void dispose() {
-    _menuScrollController.dispose();
-    _categoriesScrollController.dispose();
+    _verticalScrollController.dispose();
+    _horizontalScrollController.dispose();
     super.dispose();
   }
 
   void _onMenuScroll() {
-    int? newActiveCategory;
-    double minOffset = double.infinity;
+    if (_isJumpingToCategory) return;
 
-    debugPrint("----- onMenuScroll Triggered -----");
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+    final double visibleTopEdge = offset.dy;
+    final double visibleBottomEdge = offset.dy + renderBox.size.height;
 
-    for (var category in categories) {
-      final keyContext = _categoryKeys[category.id]?.currentContext;
-      if (keyContext != null) {
-        final renderObject = keyContext.findRenderObject();
-        final viewport = RenderAbstractViewport.of(renderObject);
+    for (final category in categories) {
+      final sectionKey = _categorySliverKeys[category.id];
+      final sectionRenderBox =
+          sectionKey?.currentContext?.findRenderObject() as RenderBox?;
 
-        if (renderObject is RenderSliver) {
-          final offset = viewport.getOffsetToReveal(renderObject, 0.0).offset;
+      if (sectionRenderBox != null) {
+        final categoryOffset = sectionRenderBox.localToGlobal(Offset.zero).dy;
 
-          debugPrint("Category: $category, Offset: $offset");
-
-          // Если заголовок находится в верхней части экрана, но еще не исчез
-          if (offset > 0 && offset < minOffset) {
-            minOffset = offset;
-            newActiveCategory = category.id;
-          }
+        if (categoryOffset >= visibleTopEdge &&
+            categoryOffset < visibleBottomEdge) {
+          _scrollCategoryButtonToStart(category.id);
+          break;
         }
       }
     }
-
-    debugPrint("New Active Category: $newActiveCategory");
-
-    // Обновляем активную категорию, если она изменилась
-    if (newActiveCategory != null && newActiveCategory != _activeCategory) {
-      setState(() {
-        _activeCategory = newActiveCategory!;
-      });
-
-      // Прокручиваем строку категорий, чтобы активная была слева
-      _scrollCategoriesToActive(newActiveCategory);
-    }
   }
 
-  void _scrollCategoriesToActive(int categoryId) {
-    final categoryIndex = categories.indexOf(categories[categoryId]);
-    if (categoryIndex != -1) {
-      _categoriesScrollController.animateTo(
-        categoryIndex * 100.0, // Примерная ширина элемента
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  void _scrollToCategory(int categoryId) {
-    final keyContext = _categoryKeys[categoryId]?.currentContext;
+  void _scrollToCategory(int categoryId) async {
+    final keyContext = _categorySliverKeys[categoryId]?.currentContext;
     if (keyContext != null) {
+      _isJumpingToCategory = true;
       Scrollable.ensureVisible(
         keyContext,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
-      setState(() {
-        _activeCategory = categoryId;
-      });
-      _scrollCategoriesToActive(categoryId);
+      _scrollCategoryButtonToStart(categoryId);
+
+      await Future.delayed(const Duration(milliseconds: 400));
+      _isJumpingToCategory = false;
+    }
+  }
+
+  void _scrollCategoryButtonToStart(int categoryId) {
+    setState(() {
+      _activeCategory = categoryId;
+    });
+    final itemContext = _categoryButtonKeys[categoryId]?.currentContext;
+    final listContext = context;
+
+    if (itemContext != null) {
+      final itemBox = itemContext.findRenderObject() as RenderBox;
+      final listBox = listContext.findRenderObject() as RenderBox;
+
+      final itemOffset =
+          itemBox.localToGlobal(Offset.zero, ancestor: listBox).dx;
+
+      _horizontalScrollController.animateTo(
+        _horizontalScrollController.offset + itemOffset - 4,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -115,8 +111,7 @@ class _MenuScreenState extends State<MenuScreen> {
           title: SizedBox(
             height: 36,
             child: ListView.builder(
-              key: _categoriesKey,
-              controller: _categoriesScrollController,
+              controller: _horizontalScrollController,
               scrollDirection: Axis.horizontal,
               itemCount: categories.length,
               itemBuilder: (context, index) {
@@ -125,9 +120,8 @@ class _MenuScreenState extends State<MenuScreen> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: TextButton(
-                    onPressed: () {
-                      _scrollToCategory(category.id);
-                    },
+                    key: _categoryButtonKeys[category.id],
+                    onPressed: () => _scrollToCategory(category.id),
                     style: TextButton.styleFrom(
                       backgroundColor:
                           isActive ? AppColors.blue : AppColors.white,
@@ -154,12 +148,13 @@ class _MenuScreenState extends State<MenuScreen> {
             return true;
           },
           child: CustomScrollView(
-            controller: _menuScrollController,
+            controller: _verticalScrollController,
             slivers: [
               for (var category in categories) ...[
                 SliverToBoxAdapter(
-                  key: _categoryKeys[category.id],
-                  child: Padding(
+                  child: Container(
+                    key: _categorySliverKeys[
+                        category.id],
                     padding: const EdgeInsets.all(16.0),
                     child: Text(category.name,
                         style: Theme.of(context).textTheme.headlineLarge),
