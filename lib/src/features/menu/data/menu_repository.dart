@@ -1,115 +1,23 @@
-import '../../../theme/image_sources.dart';
+import '../models/dto/menu_item_dto.dart';
+import '../models/menu_category.dart';
 import '../models/menu_item.dart';
-import 'category_repository.dart';
+import 'data_sources/menu_data_source.dart';
 
-List<MenuItem> menuItems = [
-  MenuItem(
-    id: 0,
-    name: 'Олеато',
-    price: 180,
-    imageUrl: ImageSources.blackCoffee,
-    category: categories[0],
-  ),
-  MenuItem(
-    id: 1,
-    name: 'Американо',
-    price: 200,
-    imageUrl: ImageSources.blackCoffee,
-    category: categories[0],
-  ),
-  MenuItem(
-    id: 2,
-    name: 'Эспрессо',
-    price: 99,
-    imageUrl: ImageSources.blackCoffee,
-    category: categories[0],
-  ),
-  MenuItem(
-    id: 3,
-    name: 'Айс кофе',
-    price: 350,
-    imageUrl: ImageSources.blackCoffee,
-    category: categories[0],
-  ),
-  MenuItem(
-    id: 4,
-    name: 'Капучино',
-    price: 250,
-    imageUrl: ImageSources.coffeeWithMilk,
-    category: categories[1],
-  ),
-  MenuItem(
-    id: 5,
-    name: 'Флэт Уайт',
-    price: 200,
-    imageUrl: ImageSources.coffeeWithMilk,
-    category: categories[1],
-  ),
-  MenuItem(
-    id: 6,
-    name: 'Латте',
-    price: 250,
-    imageUrl: ImageSources.coffeeWithMilk,
-    category: categories[1],
-  ),
-  MenuItem(
-    id: 7,
-    name: 'Чёрный',
-    price: 20,
-    imageUrl: ImageSources.tea,
-    category: categories[2],
-  ),
-  MenuItem(
-    id: 8,
-    name: 'Зеленый',
-    price: 30,
-    imageUrl: ImageSources.tea,
-    category: categories[2],
-  ),
-  MenuItem(
-    id: 9,
-    name: 'Улун',
-    price: 40,
-    imageUrl: ImageSources.tea,
-    category: categories[2],
-  ),
-  MenuItem(
-    id: 10,
-    name: 'Раф кокос',
-    price: 279,
-    imageUrl: ImageSources.authorsDrink,
-    category: categories[3],
-  ),
-  MenuItem(
-    id: 11,
-    name: 'Бамбл',
-    price: 305,
-    imageUrl: ImageSources.authorsDrink,
-    category: categories[3],
-  ),
-  MenuItem(
-    id: 12,
-    name: 'Сезонный',
-    price: 305,
-    imageUrl: ImageSources.authorsDrink,
-    category: categories[3],
-  ),
-  MenuItem(
-    id: 13,
-    name: 'Чизкейк',
-    price: 300,
-    category: categories[4],
-  ),
-  MenuItem(
-    id: 14,
-    name: 'Тирамису',
-    price: 300,
-    category: categories[4],
-  ),
-  MenuItem(
-    id: 15,
-    name: 'Брауни',
-    price: 300,
-    category: categories[4],
-  ),
-];
+abstract interface class IMenuRepository {
+  Future<List<MenuItem>> loadMenuItems({required MenuCategory category, int page = 0, int limit = 25});
+}
+
+final class MenuRepository implements IMenuRepository {
+  final IMenuDataSource _networkMenuDataSource;
+
+  const MenuRepository({
+    required IMenuDataSource networkMenuDataSource,
+  }) :  _networkMenuDataSource = networkMenuDataSource;
+
+  @override
+  Future<List<MenuItem>> loadMenuItems({required MenuCategory category, int page = 0, int limit = 25}) async {
+    var dtos = <MenuItemDto>[];
+    dtos = await _networkMenuDataSource.fetchMenuItems(categoryId: '1', page: page, limit: limit);
+    return dtos.map((e) => e.toModel()).toList();
+  }
+}
