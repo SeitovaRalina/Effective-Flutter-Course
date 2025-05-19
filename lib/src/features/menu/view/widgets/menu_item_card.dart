@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/image_sources.dart';
@@ -26,10 +27,12 @@ class _MenuItemCardState extends State<MenuItemCard> {
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           child: Column(
             children: [
-              Image.asset(
-                widget.item.imageUrl ?? ImageSources.placeholder,
+              CachedNetworkImage(
+                imageUrl: widget.item.imageUrl ?? ImageSources.placeholder,
                 height: 100,
                 fit: BoxFit.contain,
+                placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(color: AppColors.blue)),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
