@@ -1,10 +1,12 @@
 import '../models/dto/menu_item_dto.dart';
 import '../models/menu_category.dart';
 import '../models/menu_item.dart';
+import '../utils/menu_items_mapper.dart';
 import 'data_sources/menu_data_source.dart';
 
 abstract interface class IMenuRepository {
-  Future<List<MenuItem>> loadMenuItems({required MenuCategory category, int page = 0, int limit = 25});
+  Future<List<MenuItem>> loadMenuItems(
+      {required MenuCategory category, int page = 0, int limit = 25});
 }
 
 final class MenuRepository implements IMenuRepository {
@@ -12,12 +14,14 @@ final class MenuRepository implements IMenuRepository {
 
   const MenuRepository({
     required IMenuDataSource networkMenuDataSource,
-  }) :  _networkMenuDataSource = networkMenuDataSource;
+  }) : _networkMenuDataSource = networkMenuDataSource;
 
   @override
-  Future<List<MenuItem>> loadMenuItems({required MenuCategory category, int page = 0, int limit = 25}) async {
+  Future<List<MenuItem>> loadMenuItems(
+      {required MenuCategory category, int page = 0, int limit = 25}) async {
     var dtos = <MenuItemDto>[];
-    dtos = await _networkMenuDataSource.fetchMenuItems(categoryId: '1', page: page, limit: limit);
+    dtos = await _networkMenuDataSource.fetchMenuItems(
+        categoryId: category.id, page: page, limit: limit);
     return dtos.map((e) => e.toModel()).toList();
   }
 }

@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../models/dto/menu_category_dto.dart';
 
 abstract interface class ICategoriesDataSource {
@@ -5,14 +7,19 @@ abstract interface class ICategoriesDataSource {
 }
 
 final class NetworkCategoriesDataSource implements ICategoriesDataSource {
-  // Put dependency of network class such as dio or http, e.g.
-  // final Dio _dio;
+  final Dio _dio;
 
-  const NetworkCategoriesDataSource(/*{required Dio dio}*/)/* : _dio = dio*/;
+  const NetworkCategoriesDataSource({required Dio dio}) : _dio = dio;
 
   @override
-  Future<List<MenuCategoryDto>> fetchCategories() {
-    // TODO: implement fetchCategories
-    throw UnimplementedError();
+  Future<List<MenuCategoryDto>> fetchCategories() async {
+    final response = await _dio.get('/products/categories');
+
+    if (response.statusCode == 200) {
+      final List<dynamic> categories = response.data['data'];
+      return categories.map((category) => MenuCategoryDto.fromJson(category)).toList();
+    } else {
+      throw Exception('Failed to fetch categories');
+    }
   }
 }
