@@ -3,6 +3,6 @@ import '../models/menu_category.dart';
 
 extension CategoryMapper on MenuCategoryDto {
   MenuCategory toModel() {
-    return MenuCategory();
+    return MenuCategory(id: id, name: slug);
   }
 }
