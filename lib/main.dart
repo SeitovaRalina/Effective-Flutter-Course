@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 
 import 'src/app.dart';
+import 'src/common/bloc/base_observer.dart';
 
 void main() {
+  Bloc.observer = const BaseObserver();
   runZonedGuarded(
       () => runApp(
             DevicePreview(
