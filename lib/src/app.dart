@@ -4,6 +4,9 @@ import 'package:effective_flutter_course/src/theme/theme.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'features/menu/bloc/menu_bloc.dart';
 
 import 'features/menu/data/category_repository.dart';
 import 'features/menu/data/data_sources/categories_data_source.dart';
@@ -53,7 +56,18 @@ class CoffeeShop extends StatelessWidget {
         supportedLocales: AppLocalizations.supportedLocales,
         onGenerateTitle: (context) => AppLocalizations.of(context)!.title,
         theme: theme,
-        home: const MenuScreen(),
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => MenuBloc(
+                menuRepository: context.read<IMenuRepository>(),
+                categoryRepository: context.read<ICategoryRepository>(),
+              ),
+            ),
+          ],
+          child: const MenuScreen(),
+        ),
+      ),
     );
   }
 }

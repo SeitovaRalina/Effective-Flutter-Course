@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
 
 import '../data/category_repository.dart';
 import '../data/menu_repository.dart';
@@ -20,18 +21,15 @@ final class MenuBloc extends Bloc<MenuEvent, MenuState> {
   })  : _menuRepository = menuRepository,
         _categoryRepository = categoryRepository,
         super(const IdleMenuState()) {
-    on<MenuEvent>((event, emit) {
+    on<MenuEvent>((event, emit) async {
       switch (event) {
         case LoadCategoriesEvent():
-          _loadCategories(event, emit);
+          await _loadCategories(event, emit);
         case LoadPageEvent():
-          _loadMenuItems(event, emit);
+          await _loadMenuItems(event, emit);
       }
     });
   }
-
-  MenuCategory? _currentPaginatedCategory;
-  final int _currentPage = 0;
 
   Future<void> _loadCategories(
       LoadCategoriesEvent event, Emitter<MenuState> emit) async {
@@ -39,6 +37,8 @@ final class MenuBloc extends Bloc<MenuEvent, MenuState> {
     try {
       final categories = await _categoryRepository.loadCategories();
       emit(SuccessfulMenuState(categories: categories, items: List.empty()));
+
+      add(const LoadPageEvent());
     } on Object {
       emit(ErrorMenuState(categories: state.categories, items: state.items));
       rethrow;
@@ -49,24 +49,32 @@ final class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
   Future<void> _loadMenuItems(
       LoadPageEvent event, Emitter<MenuState> emit) async {
-    _currentPaginatedCategory ??= state.categories?.first;
-    if (_currentPaginatedCategory == null) return;
+    final categories = state.categories;
+    if (categories == null || categories.isEmpty) return;
 
-    emit(ProgressMenuState(items: state.items));
+    emit(ProgressMenuState(categories: categories, items: state.items));
+
+    final List<MenuItem> allItems = [];
+
     try {
-      final items = await _menuRepository.loadMenuItems(
-          category: _currentPaginatedCategory!,
-          page: _currentPage,
-          limit: _pageLimit);
-      if (items.length < _pageLimit) {
-        // Обновить счетчик страниц и выбрать следующую категорию
+      for (final category in categories) {
+        int page = 0;
+        bool hasMore = true;
+
+        while (hasMore) {
+          final items = await _menuRepository.loadMenuItems(
+              category: category, page: page, limit: _pageLimit);
+          allItems.addAll(items);
+          hasMore = items.length == _pageLimit;
+          page++;
+        }
       }
-      emit(SuccessfulMenuState(categories: state.categories, items: items));
+      emit(SuccessfulMenuState(categories: state.categories, items: allItems));
     } on Object {
-      emit(ErrorMenuState(categories: state.categories, items: state.items));
+      emit(ErrorMenuState(categories: state.categories, items: allItems));
       rethrow;
     } finally {
-      emit(IdleMenuState(categories: state.categories, items: state.items));
+      emit(IdleMenuState(categories: state.categories, items: allItems));
     }
   }
 }
