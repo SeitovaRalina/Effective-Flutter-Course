@@ -104,7 +104,7 @@ class _MenuScreenState extends State<MenuScreen> {
         if (state is ProgressMenuState && _categories.isEmpty) {
           return const Scaffold(
               body: Center(
-                  child: CircularProgressIndicator(color: AppColors.blue,)));
+                  child: CircularProgressIndicator()));
         }
         if (state is ErrorMenuState) {
           return Scaffold(
@@ -182,7 +182,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         ? const Padding(
                             padding: EdgeInsets.symmetric(vertical: 32),
                             child: Center(
-                                child: CircularProgressIndicator(color: AppColors.blue)),
+                                child: CircularProgressIndicator()),
                           )
                         : GridView.builder(
                             shrinkWrap: true,

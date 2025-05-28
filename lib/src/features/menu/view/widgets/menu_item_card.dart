@@ -32,7 +32,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                 height: 100,
                 fit: BoxFit.contain,
                 placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(color: AppColors.blue)),
+                    child: CircularProgressIndicator()),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),

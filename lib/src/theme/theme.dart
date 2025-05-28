@@ -11,6 +11,7 @@ final ThemeData theme = ThemeData(
     color: AppColors.white,
     margin: EdgeInsets.zero,
   ),
+  progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.blue),
   textTheme: TextTheme(
     headlineLarge: GoogleFonts.roboto(
       fontSize: 32,
