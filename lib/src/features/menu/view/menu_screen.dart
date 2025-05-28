@@ -5,6 +5,8 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../localization/generated/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 import '../bloc/menu_bloc.dart';
+import '../models/menu_item.dart';
+import '../models/menu_category.dart';
 import 'widgets/menu_item_card.dart';
 
 class MenuScreen extends StatefulWidget {
@@ -15,68 +17,64 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  final ScrollController _verticalScrollController = ScrollController();
+  final ItemScrollController _verticalScrollController = ItemScrollController();
+  final ItemPositionsListener _verticalScrollListener =
+      ItemPositionsListener.create();
+
   final ScrollController _horizontalScrollController = ScrollController();
-  final Map<int, GlobalKey> _categorySliverKeys = {};
   final Map<int, GlobalKey> _categoryButtonKeys = {};
-  bool _isJumpingToCategory = false;
+
   int _activeCategory = 0;
+
+  List<MenuCategory> get _categories =>
+      context.read<MenuBloc>().state.categories ?? [];
+
+  List<MenuItem> get _items => context.read<MenuBloc>().state.items ?? [];
 
   @override
   void initState() {
     super.initState();
     context.read<MenuBloc>().add(const LoadCategoriesEvent());
-    _verticalScrollController.addListener(_onMenuScroll);
+    _verticalScrollListener.itemPositions
+        .addListener(_updateActiveCategoryOnScroll);
   }
 
   @override
   void dispose() {
-    _verticalScrollController.dispose();
+    _verticalScrollListener.itemPositions
+        .removeListener(_updateActiveCategoryOnScroll);
     _horizontalScrollController.dispose();
     super.dispose();
   }
 
-  void _onMenuScroll() {
-    if (_isJumpingToCategory) return;
+  void _updateActiveCategoryOnScroll() {
+    final positions = _verticalScrollListener.itemPositions.value;
+    if (positions.isEmpty) return;
 
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final Offset offset = renderBox.localToGlobal(Offset.zero);
-    final double visibleTopEdge = offset.dy;
-    final double visibleBottomEdge = offset.dy + renderBox.size.height;
+    final firstVisibleIndex = positions.first.index;
+    final newCategoryId = _categories[firstVisibleIndex].id;
 
-    for (final entry in _categorySliverKeys.entries) {
-      final sectionRenderBox =
-          entry.value.currentContext?.findRenderObject() as RenderBox?;
-
-      if (sectionRenderBox != null) {
-        final categoryOffset = sectionRenderBox.localToGlobal(Offset.zero).dy;
-
-        if (categoryOffset >= visibleTopEdge &&
-            categoryOffset < visibleBottomEdge) {
-          _scrollCategoryButtonToStart(entry.key);
-          break;
-        }
-      }
+    if (newCategoryId != _activeCategory) {
+      _scrollActiveCategoryButtonToStart(newCategoryId);
     }
   }
 
   void _scrollToCategory(int categoryId) async {
-    final keyContext = _categorySliverKeys[categoryId]?.currentContext;
-    if (keyContext != null) {
-      _isJumpingToCategory = true;
-      Scrollable.ensureVisible(
-        keyContext,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-      _scrollCategoryButtonToStart(categoryId);
+    final index = _categories.indexWhere((c) => c.id == categoryId);
+    if (index == -1) return;
 
-      await Future.delayed(const Duration(milliseconds: 400));
-      _isJumpingToCategory = false;
-    }
+    await _verticalScrollController.scrollTo(
+      index: index,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+
+    _scrollActiveCategoryButtonToStart(categoryId);
+
+    await Future.delayed(const Duration(milliseconds: 300));
   }
 
-  void _scrollCategoryButtonToStart(int categoryId) {
+  void _scrollActiveCategoryButtonToStart(int categoryId) {
     setState(() {
       _activeCategory = categoryId;
     });
@@ -103,27 +101,23 @@ class _MenuScreenState extends State<MenuScreen> {
     return BlocBuilder<MenuBloc, MenuState>(
       buildWhen: (previous, current) => current is! IdleMenuState,
       builder: (context, state) {
-        final categories = state.categories ?? [];
-        final menuItems = state.items ?? [];
-
-        if (state is ProgressMenuState && categories.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+        if (state is ProgressMenuState && _categories.isEmpty) {
+          return const Scaffold(
+              body: Center(
+                  child: CircularProgressIndicator(color: AppColors.blue,)));
         }
-
         if (state is ErrorMenuState) {
-          return Center(
+          return Scaffold(
+              body: Center(
             child: Text(
               AppLocalizations.of(context)!.dataLoadFailure,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-          );
+          ));
         }
-
-        for (final category in categories) {
-          _categorySliverKeys.putIfAbsent(category.id, () => GlobalKey());
+        for (final category in _categories) {
           _categoryButtonKeys.putIfAbsent(category.id, () => GlobalKey());
         }
-
         return SafeArea(
           child: Scaffold(
             appBar: AppBar(
@@ -135,9 +129,9 @@ class _MenuScreenState extends State<MenuScreen> {
                 child: ListView.builder(
                   controller: _horizontalScrollController,
                   scrollDirection: Axis.horizontal,
-                  itemCount: categories.length,
+                  itemCount: _categories.length,
                   itemBuilder: (context, index) {
-                    final category = categories[index];
+                    final category = _categories[index];
                     final isActive = category.id == _activeCategory;
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -164,62 +158,52 @@ class _MenuScreenState extends State<MenuScreen> {
                 ),
               ),
             ),
-            body: NotificationListener<ScrollUpdateNotification>(
-              onNotification: (_) {
-                _onMenuScroll();
-                return true;
-              },
-              child: CustomScrollView(
-                controller: _verticalScrollController,
-                slivers: [
-                  for (var category in categories) ...[
-                    SliverToBoxAdapter(
-                      child: Container(
-                        key: _categorySliverKeys[category.id],
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(category.name,
-                            style: Theme.of(context).textTheme.headlineLarge),
+            body: ScrollablePositionedList.builder(
+              itemScrollController: _verticalScrollController,
+              itemPositionsListener: _verticalScrollListener,
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final categoryItems = _items
+                    .where((item) => item.category.id == category.id)
+                    .toList();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        category.name,
+                        style: Theme.of(context).textTheme.headlineLarge,
                       ),
                     ),
-                    (() {
-                      final categoryItems = menuItems
-                          .where((item) => item.category.id == category.id)
-                          .toList();
-
-                      if (categoryItems.isEmpty && state is ProgressMenuState) {
-                        return const SliverToBoxAdapter(
-                          child: Padding(
+                    categoryItems.isEmpty && state is ProgressMenuState
+                        ? const Padding(
                             padding: EdgeInsets.symmetric(vertical: 32),
                             child: Center(
-                              child: CircularProgressIndicator(
-                                  color: AppColors.blue),
+                                child: CircularProgressIndicator(color: AppColors.blue)),
+                          )
+                        : GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: categoryItems.length,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              mainAxisExtent: 210,
                             ),
-                          ),
-                        );
-                      }
-
-                      return SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverGrid(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              return MenuItemCard(item: categoryItems[index]);
+                            itemBuilder: (context, itemIndex) {
+                              return MenuItemCard(
+                                  item: categoryItems[itemIndex]);
                             },
-                            childCount: categoryItems.length,
                           ),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            mainAxisExtent: 210,
-                          ),
-                        ),
-                      );
-                    })(),
                   ],
-                ],
-              ),
+                );
+              },
             ),
           ),
         );
