@@ -41,7 +41,6 @@ final class MenuBloc extends Bloc<MenuEvent, MenuState> {
       add(const LoadPageEvent());
     } on Object {
       emit(ErrorMenuState(categories: state.categories, items: state.items));
-      rethrow;
     } finally {
       emit(IdleMenuState(categories: state.categories, items: state.items));
     }
@@ -72,7 +71,6 @@ final class MenuBloc extends Bloc<MenuEvent, MenuState> {
       emit(SuccessfulMenuState(categories: state.categories, items: allItems));
     } on Object {
       emit(ErrorMenuState(categories: state.categories, items: allItems));
-      rethrow;
     } finally {
       emit(IdleMenuState(categories: state.categories, items: allItems));
     }

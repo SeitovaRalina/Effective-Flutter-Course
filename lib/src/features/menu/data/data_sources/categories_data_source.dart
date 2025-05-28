@@ -15,11 +15,9 @@ final class NetworkCategoriesDataSource implements ICategoriesDataSource {
   Future<List<MenuCategoryDto>> fetchCategories() async {
     final response = await _dio.get('/products/categories');
 
-    if (response.statusCode == 200) {
-      final List<dynamic> categories = response.data['data'];
-      return categories.map((category) => MenuCategoryDto.fromJson(category)).toList();
-    } else {
-      throw Exception('Failed to fetch categories');
-    }
+    final List<dynamic> categories = response.data['data'];
+    return categories
+        .map((category) => MenuCategoryDto.fromJson(category))
+        .toList();
   }
 }

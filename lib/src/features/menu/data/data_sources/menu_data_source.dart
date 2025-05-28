@@ -23,11 +23,7 @@ final class NetworkMenuDataSource implements IMenuDataSource {
       },
     );
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = response.data['data'];
-      return data.map((item) => MenuItemDto.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load menu items');
-    }
+    final List<dynamic> data = response.data['data'];
+    return data.map((item) => MenuItemDto.fromJson(item)).toList();
   }
 }
