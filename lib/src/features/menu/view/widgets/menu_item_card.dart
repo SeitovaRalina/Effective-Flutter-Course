@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../../../localization/generated/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/image_sources.dart';
 import '../../models/menu_item.dart';
