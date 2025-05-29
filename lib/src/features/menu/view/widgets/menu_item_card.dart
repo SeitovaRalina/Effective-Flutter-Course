@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../localization/generated/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/image_sources.dart';
+import '../../../order/bloc/order_bloc.dart';
 import '../../models/menu_item.dart';
 
-class MenuItemCard extends StatefulWidget {
+class MenuItemCard extends StatelessWidget {
   final MenuItem item;
 
   const MenuItemCard({required this.item, super.key});
 
   @override
-  State<MenuItemCard> createState() => _MenuItemCardState();
-}
-
-class _MenuItemCardState extends State<MenuItemCard> {
-  int _quantity = 0;
-
-  @override
   Widget build(BuildContext context) {
+    final quantity = context.select<OrderBloc, int>(
+      (bloc) => bloc.state.items[item] ?? 0,
+    );
+
     return SizedBox(
       width: 180,
       child: Card(
@@ -28,23 +27,23 @@ class _MenuItemCardState extends State<MenuItemCard> {
           child: Column(
             children: [
               CachedNetworkImage(
-                imageUrl: widget.item.imageUrl ?? ImageSources.placeholder,
+                imageUrl: item.imageUrl ?? ImageSources.placeholder,
                 height: 100,
                 fit: BoxFit.contain,
-                placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator()),
+                placeholder: (context, url) =>
+                    const Center(child: CircularProgressIndicator()),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  widget.item.name,
+                  item.name,
                   style: Theme.of(context).textTheme.titleMedium,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               SizedBox(
                 height: 24,
-                child: _quantity > 0
+                child: quantity > 0
                     ? Row(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -52,9 +51,10 @@ class _MenuItemCardState extends State<MenuItemCard> {
                           _iconButton(
                             icon: Icons.remove,
                             onPressed: () {
-                              setState(() {
-                                if (_quantity > 0) _quantity--;
-                              });
+                              context.read<OrderBloc>().add(
+                                    ChangeItemQuantityEvent(
+                                        item: item, quantity: quantity - 1),
+                                  );
                             },
                           ),
                           Expanded(
@@ -69,7 +69,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  '$_quantity',
+                                  '$quantity',
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelMedium!
@@ -81,34 +81,40 @@ class _MenuItemCardState extends State<MenuItemCard> {
                           _iconButton(
                             icon: Icons.add,
                             onPressed: () {
-                              setState(() {
-                                if (_quantity < 10) {
-                                  _quantity++;
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      duration: const Duration(seconds: 2),
-                                      content: Text(
-                                        AppLocalizations.of(context)!
-                                            .increaseItemQuantityFailure,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium!
-                                            .copyWith(color: AppColors.white),
+                              if (quantity < 10) {
+                                context.read<OrderBloc>().add(
+                                      ChangeItemQuantityEvent(
+                                        item: item,
+                                        quantity: quantity + 1,
                                       ),
+                                    );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    duration: const Duration(seconds: 2),
+                                    content: Text(
+                                      AppLocalizations.of(context)!
+                                          .increaseItemQuantityFailure,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge!
+                                          .copyWith(color: AppColors.white),
                                     ),
-                                  );
-                                }
-                              });
+                                  ),
+                                );
+                              }
                             },
                           ),
                         ],
                       )
                     : TextButton(
                         onPressed: () {
-                          setState(() {
-                            _quantity = 1;
-                          });
+                          context.read<OrderBloc>().add(
+                                ChangeItemQuantityEvent(
+                                  item: item,
+                                  quantity: 1,
+                                ),
+                              );
                         },
                         style: TextButton.styleFrom(
                           backgroundColor: AppColors.blue,
@@ -116,8 +122,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                         ),
                         child: Center(
                           child: Text(
-                            AppLocalizations.of(context)!
-                                .price(widget.item.price),
+                            AppLocalizations.of(context)!.price(item.price),
                             style: Theme.of(context)
                                 .textTheme
                                 .labelMedium!
