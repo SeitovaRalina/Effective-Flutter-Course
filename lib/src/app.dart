@@ -12,6 +12,7 @@ import 'features/menu/data/data_sources/categories_data_source.dart';
 import 'features/menu/data/data_sources/menu_data_source.dart';
 import 'features/menu/data/menu_repository.dart';
 import 'features/menu/view/menu_screen.dart';
+import 'features/order/bloc/order_bloc.dart';
 import 'features/order/data/data_sources/order_data_source.dart';
 import 'features/order/data/order_repository.dart';
 import 'localization/generated/app_localizations.dart';
@@ -73,6 +74,11 @@ class CoffeeShop extends StatelessWidget {
                 categoryRepository: context.read<ICategoryRepository>(),
               ),
             ),
+            BlocProvider(
+              create: (context) => OrderBloc(
+                orderRepository: context.read<IOrderRepository>(),
+              ),
+            )
           ],
           child: const MenuScreen(),
         ),
