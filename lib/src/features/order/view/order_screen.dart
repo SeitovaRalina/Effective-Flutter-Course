@@ -72,8 +72,8 @@ class OrderScreen extends StatelessWidget {
                         AppLocalizations.of(context)!.orderSuccess,
                         style: Theme.of(context)
                             .textTheme
-                            .titleLarge!
-                            .copyWith(color: AppColors.white),
+                            .titleLarge
+                            ?.copyWith(color: AppColors.white),
                       ),
                     ),
                   );
@@ -86,8 +86,8 @@ class OrderScreen extends StatelessWidget {
                         AppLocalizations.of(context)!.orderFailure,
                         style: Theme.of(context)
                             .textTheme
-                            .titleLarge!
-                            .copyWith(color: AppColors.white),
+                            .titleLarge
+                            ?.copyWith(color: AppColors.white),
                       ),
                     ),
                   );

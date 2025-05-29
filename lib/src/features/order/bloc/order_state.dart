@@ -4,10 +4,7 @@ sealed class OrderState extends Equatable {
   final Map<MenuItem, int> items;
   final int totalPrice;
 
-  const OrderState({
-    required this.items,
-    required this.totalPrice
-  });
+  const OrderState({required this.items, required this.totalPrice});
 
   @override
   List<Object> get props => [items, totalPrice];
@@ -24,10 +21,11 @@ final class ProgressOrderState extends OrderState {
 }
 
 final class SuccessfulOrderState extends OrderState {
-  const SuccessfulOrderState() : super(
-    items: const {},
-    totalPrice: 0,
-  );
+  const SuccessfulOrderState()
+      : super(
+          items: const {},
+          totalPrice: 0,
+        );
 
   @override
   String toString() => 'SuccessfulOrderState';

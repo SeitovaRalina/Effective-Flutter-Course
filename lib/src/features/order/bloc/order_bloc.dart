@@ -33,8 +33,9 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       items.remove(event.item);
     }
 
-    final totalPrice =
-        items.entries.map((e) => e.key.price * e.value).fold(0, (a, b) => a + b);
+    final totalPrice = items.entries
+        .map((e) => e.key.price * e.value)
+        .fold(0, (a, b) => a + b);
 
     emit(ProgressOrderState(items: items, totalPrice: totalPrice));
   }

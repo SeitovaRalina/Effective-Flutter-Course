@@ -12,5 +12,6 @@ class MenuCategoryDto {
     required this.slug,
   });
 
-  factory MenuCategoryDto.fromJson(Map<String, dynamic> json) => _$MenuCategoryDtoFromJson(json);
+  factory MenuCategoryDto.fromJson(Map<String, dynamic> json) =>
+      _$MenuCategoryDtoFromJson(json);
 }

@@ -6,7 +6,8 @@ import '../models/menu_item.dart';
 
 extension MenuItemsMapper on MenuItemDto {
   MenuItem toModel() {
-    final String rubPrice = prices.where((p) => p['currency'] == 'RUB').first['value'];
+    final String rubPrice =
+        prices.where((p) => p['currency'] == 'RUB').first['value'];
 
     return MenuItem(
       id: id,

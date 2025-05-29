@@ -16,7 +16,8 @@ final class OrderRepository implements IOrderRepository {
 
   @override
   Future<void> submitOrder(Map<int, int> positions, String fcmToken) async {
-    final stringMap = positions.map((key, value) => MapEntry(key.toString(), value));
+    final stringMap =
+        positions.map((key, value) => MapEntry(key.toString(), value));
     final dto = OrderRequestDto(
       positions: stringMap,
       token: fcmToken,

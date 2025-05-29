@@ -48,7 +48,7 @@ class MenuItemCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          _iconButton(
+                          QuantityIconButton(
                             icon: Icons.remove,
                             onPressed: () {
                               context.read<OrderBloc>().add(
@@ -72,13 +72,13 @@ class MenuItemCard extends StatelessWidget {
                                   '$quantity',
                                   style: Theme.of(context)
                                       .textTheme
-                                      .labelMedium!
-                                      .copyWith(color: AppColors.white),
+                                      .labelMedium
+                                      ?.copyWith(color: AppColors.white),
                                 ),
                               ),
                             ),
                           ),
-                          _iconButton(
+                          QuantityIconButton(
                             icon: Icons.add,
                             onPressed: () {
                               if (quantity < 10) {
@@ -97,8 +97,8 @@ class MenuItemCard extends StatelessWidget {
                                           .increaseItemQuantityFailure,
                                       style: Theme.of(context)
                                           .textTheme
-                                          .titleLarge!
-                                          .copyWith(color: AppColors.white),
+                                          .titleLarge
+                                          ?.copyWith(color: AppColors.white),
                                     ),
                                   ),
                                 );
@@ -125,8 +125,8 @@ class MenuItemCard extends StatelessWidget {
                             AppLocalizations.of(context)!.price(item.price),
                             style: Theme.of(context)
                                 .textTheme
-                                .labelMedium!
-                                .copyWith(color: AppColors.white),
+                                .labelMedium
+                                ?.copyWith(color: AppColors.white),
                           ),
                         ),
                       ),
@@ -137,9 +137,20 @@ class MenuItemCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _iconButton(
-      {required IconData icon, required VoidCallback onPressed}) {
+class QuantityIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const QuantityIconButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
       height: 24,
       width: 24,
