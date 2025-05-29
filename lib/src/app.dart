@@ -12,6 +12,8 @@ import 'features/menu/data/data_sources/categories_data_source.dart';
 import 'features/menu/data/data_sources/menu_data_source.dart';
 import 'features/menu/data/menu_repository.dart';
 import 'features/menu/view/menu_screen.dart';
+import 'features/order/data/data_sources/order_data_source.dart';
+import 'features/order/data/order_repository.dart';
 import 'localization/generated/app_localizations.dart';
 
 class CoffeeShop extends StatelessWidget {
@@ -41,7 +43,14 @@ class CoffeeShop extends StatelessWidget {
               dio: dioClient,
             ),
           ),
-        )
+        ),
+        RepositoryProvider<IOrderRepository>(
+          create: (_) => OrderRepository(
+            networkOrderDataSource: NetworkOrderDataSource(
+              dio: dioClient,
+            ),
+          ),
+        ),
       ],
       child: MaterialApp(
         locale: DevicePreview.locale(context),
