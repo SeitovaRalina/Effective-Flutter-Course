@@ -4,6 +4,8 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../localization/generated/app_localizations.dart';
 import '../../../theme/app_colors.dart';
+import '../../order/bloc/order_bloc.dart';
+import '../../order/view/order_screen.dart';
 import '../bloc/menu_bloc.dart';
 import '../models/menu_item.dart';
 import '../models/menu_category.dart';
@@ -103,8 +105,7 @@ class _MenuScreenState extends State<MenuScreen> {
       builder: (context, state) {
         if (state is ProgressMenuState && _categories.isEmpty) {
           return const Scaffold(
-              body: Center(
-                  child: CircularProgressIndicator()));
+              body: Center(child: CircularProgressIndicator()));
         }
         if (state is ErrorMenuState) {
           return Scaffold(
@@ -181,8 +182,7 @@ class _MenuScreenState extends State<MenuScreen> {
                     categoryItems.isEmpty && state is ProgressMenuState
                         ? const Padding(
                             padding: EdgeInsets.symmetric(vertical: 32),
-                            child: Center(
-                                child: CircularProgressIndicator()),
+                            child: Center(child: CircularProgressIndicator()),
                           )
                         : GridView.builder(
                             shrinkWrap: true,
@@ -202,6 +202,30 @@ class _MenuScreenState extends State<MenuScreen> {
                             },
                           ),
                   ],
+                );
+              },
+            ),
+            floatingActionButton: BlocBuilder<OrderBloc, OrderState>(
+              builder: (context, state) {
+                if (state.totalPrice == 0) return const SizedBox.shrink();
+                return FloatingActionButton.extended(
+                  onPressed: () {
+                    showModalBottomSheet<void>(
+                        isScrollControlled: true,
+                        context: context,
+                        builder: (_) => BlocProvider.value(
+                              value: context.read<OrderBloc>(),
+                              child: const OrderScreen(),
+                            ));
+                  },
+                  backgroundColor: AppColors.blue,
+                  label: Text(
+                    AppLocalizations.of(context)!.price(state.totalPrice),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppColors.white,
+                        ),
+                  ),
+                  icon: const Icon(Icons.local_mall, color: AppColors.white),
                 );
               },
             ),

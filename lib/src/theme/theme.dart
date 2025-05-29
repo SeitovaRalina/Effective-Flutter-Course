@@ -11,7 +11,19 @@ final ThemeData theme = ThemeData(
     color: AppColors.white,
     margin: EdgeInsets.zero,
   ),
-  progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.blue),
+  progressIndicatorTheme:
+      const ProgressIndicatorThemeData(color: AppColors.blue),
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: AppColors.white,
+    surfaceTintColor: AppColors.white,
+    shadowColor: AppColors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(18),
+      ),
+    ),
+  ),
+  snackBarTheme: const SnackBarThemeData(backgroundColor: AppColors.snackbar),
   textTheme: TextTheme(
     headlineLarge: GoogleFonts.roboto(
       fontSize: 32,
