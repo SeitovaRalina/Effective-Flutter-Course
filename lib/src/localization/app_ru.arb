@@ -1,7 +1,6 @@
 {
     "title": "Кофейня",
     "price": "{price} ₽",
-    "increaseItemQuantityFailure": "Превышено число товаров",
     "yourOrder": "Ваш заказ",
     "orderSuccess": "Заказ создан",
     "orderFailure": "Возникла ошибка при заказе",

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:bloc/bloc.dart';
 import 'package:effective_flutter_course/src/features/order/data/order_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -14,21 +16,16 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       : _orderRepository = orderRepository,
         super(const IdleOrderState()) {
     on<OrderEvent>((event, emit) async {
-      switch (event) {
-        case ChangeItemQuantityEvent():
-          await _changeItemQuantity(event, emit);
-        case SubmitOrderEvent():
-          await _submitOrder(event, emit);
-        case CancelOrderEvent():
-          await _cancelOrder(event, emit);
-      }
+      on<ChangeItemQuantityEvent>(_changeItemQuantity);
+      on<SubmitOrderEvent>(_submitOrder);
+      on<CancelOrderEvent>(_cancelOrder);
     });
   }
   Future<void> _changeItemQuantity(
       ChangeItemQuantityEvent event, Emitter<OrderState> emit) async {
     final items = Map.of(state.items);
     if (event.quantity > 0) {
-      items[event.item] = event.quantity;
+      items[event.item] = max(event.quantity, 10);
     } else {
       items.remove(event.item);
     }
@@ -49,8 +46,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     try {
       final positions = items.map((key, value) => MapEntry(key.id, value));
-      await _orderRepository.submitOrder(
-          positions, 'fcmToken'); // Replace with actual FCM token
+      await _orderRepository.submitOrder(positions, 'fcmToken');
       emit(const SuccessfulOrderState());
     } catch (_) {
       emit(ErrorOrderState(items: items, totalPrice: state.totalPrice));

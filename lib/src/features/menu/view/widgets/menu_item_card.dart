@@ -48,14 +48,26 @@ class MenuItemCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          QuantityIconButton(
-                            icon: Icons.remove,
-                            onPressed: () {
-                              context.read<OrderBloc>().add(
-                                    ChangeItemQuantityEvent(
-                                        item: item, quantity: quantity - 1),
-                                  );
-                            },
+                          SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: Ink(
+                              decoration: const ShapeDecoration(
+                                color: AppColors.blue,
+                                shape: CircleBorder(),
+                              ),
+                              child: IconButton(
+                                onPressed: () => context.read<OrderBloc>().add(
+                                      ChangeItemQuantityEvent(
+                                        item: item,
+                                        quantity: quantity - 1,
+                                      ),
+                                    ),
+                                icon: const Icon(Icons.remove, size: 9),
+                                color: AppColors.white,
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
                           ),
                           Expanded(
                             child: Padding(
@@ -76,29 +88,26 @@ class MenuItemCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          QuantityIconButton(
-                            icon: Icons.add,
-                            onPressed: () {
-                              if (quantity < 10) {
-                                context.read<OrderBloc>().add(
+                          SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: Ink(
+                              decoration: const ShapeDecoration(
+                                color: AppColors.blue,
+                                shape: CircleBorder(),
+                              ),
+                              child: IconButton(
+                                onPressed: () => context.read<OrderBloc>().add(
                                       ChangeItemQuantityEvent(
                                         item: item,
                                         quantity: quantity + 1,
                                       ),
-                                    );
-                              } else {
-                                context.scaffoldMessenger.showSnackBar(
-                                  SnackBar(
-                                    duration: const Duration(seconds: 2),
-                                    content: Text(
-                                      context.l10n.increaseItemQuantityFailure,
-                                      style: context.textTheme.titleLarge
-                                          ?.copyWith(color: AppColors.white),
                                     ),
-                                  ),
-                                );
-                              }
-                            },
+                                icon: const Icon(Icons.add, size: 9),
+                                color: AppColors.white,
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
                           ),
                         ],
                       )

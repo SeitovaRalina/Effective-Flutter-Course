@@ -36,7 +36,8 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<MenuBloc>().add(const LoadCategoriesEvent());
+    final bloc = context.read<MenuBloc>();
+    bloc.add(const LoadCategoriesEvent());
     _verticalScrollListener.itemPositions
         .addListener(_updateActiveCategoryOnScroll);
   }
@@ -55,9 +56,18 @@ class _MenuScreenState extends State<MenuScreen> {
 
     final firstVisibleIndex = positions.first.index;
     final newCategoryId = _categories[firstVisibleIndex].id;
-
     if (newCategoryId != _activeCategory) {
       _scrollActiveCategoryButtonToStart(newCategoryId);
+    }
+
+    final isNearBottom = positions.last.itemTrailingEdge < 3;
+    final isNextCategoryLoaded = firstVisibleIndex + 1 < _categories.length
+        ? _items.any(
+            (item) => item.category.id == _categories[firstVisibleIndex + 2].id)
+        : true;
+
+    if (isNearBottom && !isNextCategoryLoaded) {
+      context.read<MenuBloc>().add(const LoadPageEvent());
     }
   }
 
@@ -103,134 +113,145 @@ class _MenuScreenState extends State<MenuScreen> {
     return BlocBuilder<MenuBloc, MenuState>(
       buildWhen: (previous, current) => current is! IdleMenuState,
       builder: (context, state) {
-        if (state is ProgressMenuState && _categories.isEmpty) {
-          return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
-        }
-        if (state is ErrorMenuState) {
-          return Scaffold(
-              body: Center(
-            child: Text(
-              context.l10n.dataLoadFailure,
-              style: context.textTheme.titleMedium,
-            ),
-          ));
-        }
-        for (final category in _categories) {
-          _categoryButtonKeys.putIfAbsent(category.id, () => GlobalKey());
-        }
-        return SafeArea(
-          child: Scaffold(
-            appBar: AppBar(
-              backgroundColor: AppColors.background,
-              surfaceTintColor: AppColors.background,
-              titleSpacing: 0,
-              title: SizedBox(
-                height: 36,
-                child: ListView.builder(
-                  controller: _horizontalScrollController,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final category = _categories[index];
-                    final isActive = category.id == _activeCategory;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: TextButton(
-                        key: _categoryButtonKeys[category.id],
-                        onPressed: () => _scrollToCategory(category.id),
-                        style: TextButton.styleFrom(
-                          backgroundColor:
-                              isActive ? AppColors.blue : AppColors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.all(8.0),
-                        ),
-                        child: Text(
-                          category.name,
-                          style: TextStyle(
-                            color: isActive ? AppColors.white : AppColors.black,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+        return switch (state) {
+          ProgressMenuState() when _categories.isEmpty =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
+          ErrorMenuState() => Scaffold(
+                body: Center(
+              child: Text(
+                context.l10n.dataLoadFailure,
+                style: context.textTheme.titleMedium,
               ),
-            ),
-            body: ScrollablePositionedList.builder(
-              itemScrollController: _verticalScrollController,
-              itemPositionsListener: _verticalScrollListener,
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final category = _categories[index];
-                final categoryItems = _items
-                    .where((item) => item.category.id == category.id)
-                    .toList();
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        category.name,
-                        style: context.textTheme.headlineLarge,
-                      ),
-                    ),
-                    categoryItems.isEmpty && state is ProgressMenuState
-                        ? const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 32),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        : GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: categoryItems.length,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              mainAxisExtent: 210,
+            )),
+          _ => (() {
+              for (final category in _categories) {
+                _categoryButtonKeys.putIfAbsent(category.id, () => GlobalKey());
+              }
+              return SafeArea(
+                child: Scaffold(
+                  appBar: AppBar(
+                    backgroundColor: AppColors.background,
+                    surfaceTintColor: AppColors.background,
+                    titleSpacing: 0,
+                    title: SizedBox(
+                      height: 36,
+                      child: ListView.builder(
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categories.length,
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          final isActive = category.id == _activeCategory;
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: TextButton(
+                              key: _categoryButtonKeys[category.id],
+                              onPressed: () {
+                                context.read<MenuBloc>().add(
+                                      LoadOneCategoryEvent(category),
+                                    );
+                                _scrollToCategory(category.id);
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor:
+                                    isActive ? AppColors.blue : AppColors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding: const EdgeInsets.all(8.0),
+                              ),
+                              child: Text(
+                                category.name,
+                                style: TextStyle(
+                                  color: isActive
+                                      ? AppColors.white
+                                      : AppColors.black,
+                                ),
+                              ),
                             ),
-                            itemBuilder: (context, itemIndex) {
-                              return MenuItemCard(
-                                  item: categoryItems[itemIndex]);
-                            },
-                          ),
-                  ],
-                );
-              },
-            ),
-            floatingActionButton: BlocBuilder<OrderBloc, OrderState>(
-              builder: (context, state) {
-                if (state.totalPrice == 0) return const SizedBox.shrink();
-                return FloatingActionButton.extended(
-                  onPressed: () {
-                    showModalBottomSheet<void>(
-                        isScrollControlled: true,
-                        context: context,
-                        builder: (_) => BlocProvider.value(
-                              value: context.read<OrderBloc>(),
-                              child: const OrderScreen(),
-                            ));
-                  },
-                  backgroundColor: AppColors.blue,
-                  label: Text(
-                    context.l10n.price(state.totalPrice),
-                    style: context.textTheme.titleSmall?.copyWith(
-                      color: AppColors.white,
+                          );
+                        },
+                      ),
                     ),
                   ),
-                  icon: const Icon(Icons.local_mall, color: AppColors.white),
-                );
-              },
-            ),
-          ),
-        );
+                  body: ScrollablePositionedList.builder(
+                    itemScrollController: _verticalScrollController,
+                    itemPositionsListener: _verticalScrollListener,
+                    itemCount: _categories.length,
+                    itemBuilder: (context, index) {
+                      final category = _categories[index];
+                      final categoryItems = _items
+                          .where((item) => item.category.id == category.id)
+                          .toList();
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              category.name,
+                              style: context.textTheme.headlineLarge,
+                            ),
+                          ),
+                          categoryItems.isEmpty && state is! ProgressMenuState
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 32),
+                                  child: Center(
+                                      child: CircularProgressIndicator()),
+                                )
+                              : GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: categoryItems.length,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    mainAxisExtent: 210,
+                                  ),
+                                  itemBuilder: (context, itemIndex) {
+                                    return MenuItemCard(
+                                        item: categoryItems[itemIndex]);
+                                  },
+                                ),
+                        ],
+                      );
+                    },
+                  ),
+                  floatingActionButton: BlocBuilder<OrderBloc, OrderState>(
+                    builder: (context, state) {
+                      if (state.totalPrice == 0) return const SizedBox.shrink();
+                      return FloatingActionButton.extended(
+                        onPressed: () {
+                          showModalBottomSheet<void>(
+                              isScrollControlled: true,
+                              context: context,
+                              builder: (_) => BlocProvider.value(
+                                    value: context.read<OrderBloc>(),
+                                    child: const OrderScreen(),
+                                  ));
+                        },
+                        backgroundColor: AppColors.blue,
+                        label: Text(
+                          context.l10n.price(state.totalPrice),
+                          style: context.textTheme.titleSmall?.copyWith(
+                            color: AppColors.white,
+                          ),
+                        ),
+                        icon: const Icon(Icons.local_mall,
+                            color: AppColors.white),
+                      );
+                    },
+                  ),
+                ),
+              );
+            })()
+        };
       },
     );
   }
