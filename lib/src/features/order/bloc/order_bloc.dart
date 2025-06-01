@@ -15,17 +15,15 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   OrderBloc({required IOrderRepository orderRepository})
       : _orderRepository = orderRepository,
         super(const IdleOrderState()) {
-    on<OrderEvent>((event, emit) async {
-      on<ChangeItemQuantityEvent>(_changeItemQuantity);
-      on<SubmitOrderEvent>(_submitOrder);
-      on<CancelOrderEvent>(_cancelOrder);
-    });
+    on<ChangeItemQuantityEvent>(_changeItemQuantity);
+    on<SubmitOrderEvent>(_submitOrder);
+    on<CancelOrderEvent>(_cancelOrder);
   }
   Future<void> _changeItemQuantity(
       ChangeItemQuantityEvent event, Emitter<OrderState> emit) async {
     final items = Map.of(state.items);
     if (event.quantity > 0) {
-      items[event.item] = max(event.quantity, 10);
+      items[event.item] = min(event.quantity, 10);
     } else {
       items.remove(event.item);
     }

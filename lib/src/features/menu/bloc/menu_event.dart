@@ -20,11 +20,3 @@ final class LoadPageEvent extends MenuEvent {
   @override
   String toString() => 'LoadPageEvent';
 }
-
-final class LoadOneCategoryEvent extends MenuEvent {
-  const LoadOneCategoryEvent(this.category);
-  final MenuCategory category;
-
-  @override
-  String toString() => 'LoadOneCategoryEvent(category: $category)';
-}

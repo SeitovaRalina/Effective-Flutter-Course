@@ -38,6 +38,9 @@ class _MenuScreenState extends State<MenuScreen> {
     super.initState();
     final bloc = context.read<MenuBloc>();
     bloc.add(const LoadCategoriesEvent());
+    bloc.stream.firstWhere((s) => s is IdleMenuState).then((_) {
+      bloc.add(const LoadPageEvent());
+    });
     _verticalScrollListener.itemPositions
         .addListener(_updateActiveCategoryOnScroll);
   }
@@ -60,13 +63,12 @@ class _MenuScreenState extends State<MenuScreen> {
       _scrollActiveCategoryButtonToStart(newCategoryId);
     }
 
-    final isNearBottom = positions.last.itemTrailingEdge < 3;
-    final isNextCategoryLoaded = firstVisibleIndex + 1 < _categories.length
-        ? _items.any(
-            (item) => item.category.id == _categories[firstVisibleIndex + 2].id)
-        : true;
+    bool isLastVisibleItem =
+        positions.any((e) => e.itemTrailingEdge > 0.8 || e.itemLeadingEdge > 0);
+    final nextItems =
+        _items.where((e) => e.category.id == _activeCategory + 1).toList();
 
-    if (isNearBottom && !isNextCategoryLoaded) {
+    if (isLastVisibleItem && nextItems.isEmpty) {
       context.read<MenuBloc>().add(const LoadPageEvent());
     }
   }
@@ -147,12 +149,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                 const EdgeInsets.symmetric(horizontal: 4.0),
                             child: TextButton(
                               key: _categoryButtonKeys[category.id],
-                              onPressed: () {
-                                context.read<MenuBloc>().add(
-                                      LoadOneCategoryEvent(category),
-                                    );
-                                _scrollToCategory(category.id);
-                              },
+                              onPressed: () => _scrollToCategory(category.id),
                               style: TextButton.styleFrom(
                                 backgroundColor:
                                     isActive ? AppColors.blue : AppColors.white,
@@ -195,30 +192,23 @@ class _MenuScreenState extends State<MenuScreen> {
                               style: context.textTheme.headlineLarge,
                             ),
                           ),
-                          categoryItems.isEmpty && state is! ProgressMenuState
-                              ? const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 32),
-                                  child: Center(
-                                      child: CircularProgressIndicator()),
-                                )
-                              : GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: categoryItems.length,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
-                                    mainAxisExtent: 210,
-                                  ),
-                                  itemBuilder: (context, itemIndex) {
-                                    return MenuItemCard(
-                                        item: categoryItems[itemIndex]);
-                                  },
-                                ),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: categoryItems.length,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              mainAxisExtent: 210,
+                            ),
+                            itemBuilder: (context, itemIndex) {
+                              return MenuItemCard(
+                                  item: categoryItems[itemIndex]);
+                            },
+                          ),
                         ],
                       );
                     },
