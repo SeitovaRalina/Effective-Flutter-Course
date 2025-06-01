@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import '../../../localization/generated/app_localizations.dart';
+import '../../../common/extensions/context_extensions.dart';
 import '../../../theme/app_colors.dart';
 import '../../order/bloc/order_bloc.dart';
 import '../../order/view/order_screen.dart';
@@ -111,8 +111,8 @@ class _MenuScreenState extends State<MenuScreen> {
           return Scaffold(
               body: Center(
             child: Text(
-              AppLocalizations.of(context)!.dataLoadFailure,
-              style: Theme.of(context).textTheme.titleMedium,
+              context.l10n.dataLoadFailure,
+              style: context.textTheme.titleMedium,
             ),
           ));
         }
@@ -176,7 +176,7 @@ class _MenuScreenState extends State<MenuScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
                         category.name,
-                        style: Theme.of(context).textTheme.headlineLarge,
+                        style: context.textTheme.headlineLarge,
                       ),
                     ),
                     categoryItems.isEmpty && state is ProgressMenuState
@@ -220,10 +220,10 @@ class _MenuScreenState extends State<MenuScreen> {
                   },
                   backgroundColor: AppColors.blue,
                   label: Text(
-                    AppLocalizations.of(context)!.price(state.totalPrice),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppColors.white,
-                        ),
+                    context.l10n.price(state.totalPrice),
+                    style: context.textTheme.titleSmall?.copyWith(
+                      color: AppColors.white,
+                    ),
                   ),
                   icon: const Icon(Icons.local_mall, color: AppColors.white),
                 );

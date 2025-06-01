@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
-import 'package:effective_flutter_course/src/theme/app_colors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:device_preview/device_preview.dart';
 
 import 'src/app.dart';
 import 'src/common/bloc/base_observer.dart';
+import 'src/theme/app_colors.dart';
 
 void main() {
   Bloc.observer = const BaseObserver();

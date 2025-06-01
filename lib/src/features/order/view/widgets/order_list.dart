@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:effective_flutter_course/src/theme/image_sources.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../localization/generated/app_localizations.dart';
+import '../../../../theme/image_sources.dart';
 import '../../../menu/models/menu_item.dart';
+import '../../../../common/extensions/context_extensions.dart';
 
 class OrderList extends StatelessWidget {
   final Map<MenuItem, int> items;
@@ -24,17 +24,21 @@ class OrderList extends StatelessWidget {
             placeholder: (context, url) => const Center(
               child: SizedBox.shrink(),
             ),
-            errorWidget: (context, url, error) => const Icon(Icons.error),
+            errorWidget: (context, url, error) => Image.asset(
+              ImageSources.placeholder,
+              fit: BoxFit.contain,
+              width: 55,
+            ),
             fit: BoxFit.contain,
             width: 55,
           ),
           title: Text(
             item.name,
-            style: Theme.of(context).textTheme.titleMedium,
+            style: context.textTheme.titleMedium,
           ),
           trailing: Text(
-            AppLocalizations.of(context)!.price(item.price),
-            style: Theme.of(context).textTheme.titleMedium,
+            context.l10n.price(item.price),
+            style: context.textTheme.titleMedium,
           ),
         );
       },

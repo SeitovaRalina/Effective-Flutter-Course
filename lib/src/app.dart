@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:effective_flutter_course/src/theme/theme.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +15,8 @@ import 'features/order/bloc/order_bloc.dart';
 import 'features/order/data/data_sources/order_data_source.dart';
 import 'features/order/data/order_repository.dart';
 import 'localization/generated/app_localizations.dart';
+import 'common/extensions/context_extensions.dart';
+import 'theme/theme.dart';
 
 class CoffeeShop extends StatelessWidget {
   const CoffeeShop({super.key});
@@ -64,7 +65,7 @@ class CoffeeShop extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        onGenerateTitle: (context) => AppLocalizations.of(context)!.title,
+        onGenerateTitle: (context) => context.l10n.title,
         theme: theme,
         home: MultiBlocProvider(
           providers: [

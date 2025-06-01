@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../localization/generated/app_localizations.dart';
+import '../../../../common/extensions/context_extensions.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/image_sources.dart';
 import '../../../order/bloc/order_bloc.dart';
@@ -37,7 +37,7 @@ class MenuItemCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   item.name,
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: context.textTheme.titleMedium,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -70,9 +70,7 @@ class MenuItemCard extends StatelessWidget {
                                 alignment: Alignment.center,
                                 child: Text(
                                   '$quantity',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium
+                                  style: context.textTheme.labelMedium
                                       ?.copyWith(color: AppColors.white),
                                 ),
                               ),
@@ -89,15 +87,12 @@ class MenuItemCard extends StatelessWidget {
                                       ),
                                     );
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                context.scaffoldMessenger.showSnackBar(
                                   SnackBar(
                                     duration: const Duration(seconds: 2),
                                     content: Text(
-                                      AppLocalizations.of(context)!
-                                          .increaseItemQuantityFailure,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
+                                      context.l10n.increaseItemQuantityFailure,
+                                      style: context.textTheme.titleLarge
                                           ?.copyWith(color: AppColors.white),
                                     ),
                                   ),
@@ -122,10 +117,8 @@ class MenuItemCard extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            AppLocalizations.of(context)!.price(item.price),
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
+                            context.l10n.price(item.price),
+                            style: context.textTheme.labelMedium
                                 ?.copyWith(color: AppColors.white),
                           ),
                         ),

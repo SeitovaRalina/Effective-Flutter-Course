@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../localization/generated/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 import '../bloc/order_bloc.dart';
 import 'widgets/order_list.dart';
+import '../../../common/extensions/context_extensions.dart';
 
 class OrderScreen extends StatelessWidget {
   const OrderScreen({super.key});
@@ -12,7 +12,7 @@ class OrderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.81,
+      height: context.mediaQuery.size.height * 0.81,
       child: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
@@ -34,8 +34,8 @@ class OrderScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 10.0),
                   child: Text(
-                    AppLocalizations.of(context)!.yourOrder,
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    context.l10n.yourOrder,
+                    style: context.textTheme.headlineSmall,
                   ),
                 ),
                 Padding(
@@ -43,7 +43,7 @@ class OrderScreen extends StatelessWidget {
                   child: IconButton(
                     onPressed: () {
                       context.read<OrderBloc>().add(const CancelOrderEvent());
-                      Navigator.of(context).pop();
+                      context.navigator.pop();
                     },
                     icon: const Icon(
                       Icons.delete_outlined,
@@ -65,33 +65,29 @@ class OrderScreen extends StatelessWidget {
                   current is SuccessfulOrderState || current is ErrorOrderState,
               listener: (context, state) {
                 if (state is SuccessfulOrderState) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  context.scaffoldMessenger.showSnackBar(
                     SnackBar(
                       duration: const Duration(seconds: 2),
                       content: Text(
-                        AppLocalizations.of(context)!.orderSuccess,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
+                        context.l10n.orderSuccess,
+                        style: context.textTheme.titleLarge
                             ?.copyWith(color: AppColors.white),
                       ),
                     ),
                   );
-                  Navigator.of(context).pop();
+                  context.navigator.pop();
                 } else if (state is ErrorOrderState) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  context.scaffoldMessenger.showSnackBar(
                     SnackBar(
                       duration: const Duration(seconds: 2),
                       content: Text(
-                        AppLocalizations.of(context)!.orderFailure,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
+                        context.l10n.orderFailure,
+                        style: context.textTheme.titleLarge
                             ?.copyWith(color: AppColors.white),
                       ),
                     ),
                   );
-                  Navigator.of(context).pop();
+                  context.navigator.pop();
                 }
               },
               child: TextButton(
@@ -107,10 +103,8 @@ class OrderScreen extends StatelessWidget {
                   minimumSize: const Size(double.infinity, 56),
                 ),
                 child: Text(
-                  AppLocalizations.of(context)!.makeOrder,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
+                  context.l10n.makeOrder,
+                  style: context.textTheme.titleLarge
                       ?.copyWith(color: AppColors.white),
                 ),
               ),

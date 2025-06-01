@@ -6,7 +6,7 @@ import 'app_colors.dart';
 final ThemeData theme = ThemeData(
   useMaterial3: true,
   scaffoldBackgroundColor: AppColors.background,
-  cardTheme: const CardTheme(
+  cardTheme: const CardThemeData(
     elevation: 0,
     color: AppColors.white,
     margin: EdgeInsets.zero,
