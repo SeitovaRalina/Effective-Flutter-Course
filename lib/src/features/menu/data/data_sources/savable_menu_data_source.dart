@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 
 import '../../../../common/database/database.dart';
 import '../../models/dto/menu_item_dto.dart';
+import '../../utils/menu_item_database_mapper.dart';
+import '../../utils/menu_item_price_mapper.dart';
 import 'menu_data_source.dart';
 
 abstract interface class ISavableMenuDataSource implements IMenuDataSource {
@@ -48,17 +50,13 @@ final class DbMenuDataSource implements ISavableMenuDataSource {
       for (final item in menuItems) {
         batch.insert(
           _menuDb.menuItems,
-          item.toDatabase(),
+          item.toDatabaseItem(),
           mode: InsertMode.insertOrReplace,
         );
-        for (final price in item.prices) {
+        for (final price in item.toDatabasePrices()) {
           batch.insert(
             _menuDb.menuItemPrices,
-            MenuItemPricesCompanion.insert(
-              itemId: item.id,
-              currency: price['currency'] as String,
-              value: double.parse(price['value'] as String),
-            ),
+            price,
             mode: InsertMode.insertOrReplace,
           );
         }

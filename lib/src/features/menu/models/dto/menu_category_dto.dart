@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../../../common/database/database.dart';
@@ -22,13 +21,6 @@ class MenuCategoryDto {
     return MenuCategoryDto(
       id: category.id,
       slug: category.name,
-    );
-  }
-
-  MenuCategoriesCompanion toDatabase() {
-    return MenuCategoriesCompanion.insert(
-      id: Value(id),
-      name: slug,
     );
   }
 }
