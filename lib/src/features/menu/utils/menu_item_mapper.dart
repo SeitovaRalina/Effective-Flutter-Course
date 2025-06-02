@@ -4,7 +4,7 @@ import 'package:effective_flutter_course/src/features/menu/utils/category_mapper
 import '../models/dto/menu_item_dto.dart';
 import '../models/menu_item.dart';
 
-extension MenuItemsMapper on MenuItemDto {
+extension MenuItemMapper on MenuItemDto {
   MenuItem toModel() {
     final String rubPrice =
         prices.where((p) => p['currency'] == 'RUB').first['value'];

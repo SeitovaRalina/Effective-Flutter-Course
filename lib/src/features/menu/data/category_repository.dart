@@ -19,8 +19,8 @@ final class CategoriesRepository implements ICategoryRepository {
   const CategoriesRepository({
     required ICategoriesDataSource networkCategoriesDataSource,
     required ISavableCategoriesDataSource dbCategoriesDataSource,
-  }) : _networkCategoriesDataSource = networkCategoriesDataSource,
-       _dbCategoriesDataSource = dbCategoriesDataSource;
+  })  : _networkCategoriesDataSource = networkCategoriesDataSource,
+        _dbCategoriesDataSource = dbCategoriesDataSource;
 
   @override
   Future<List<MenuCategory>> loadCategories() async {

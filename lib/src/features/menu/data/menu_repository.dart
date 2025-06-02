@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import '../models/dto/menu_item_dto.dart';
 import '../models/menu_category.dart';
 import '../models/menu_item.dart';
-import '../utils/menu_items_mapper.dart';
+import '../utils/menu_item_mapper.dart';
 import 'data_sources/menu_data_source.dart';
 import 'data_sources/savable_menu_data_source.dart';
 
