@@ -6,11 +6,24 @@ import 'app_colors.dart';
 final ThemeData theme = ThemeData(
   useMaterial3: true,
   scaffoldBackgroundColor: AppColors.background,
-  cardTheme: const CardTheme(
+  cardTheme: const CardThemeData(
     elevation: 0,
     color: AppColors.white,
     margin: EdgeInsets.zero,
   ),
+  progressIndicatorTheme:
+      const ProgressIndicatorThemeData(color: AppColors.blue),
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: AppColors.white,
+    surfaceTintColor: AppColors.white,
+    shadowColor: AppColors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(18),
+      ),
+    ),
+  ),
+  snackBarTheme: const SnackBarThemeData(backgroundColor: AppColors.snackbar),
   textTheme: TextTheme(
     headlineLarge: GoogleFonts.roboto(
       fontSize: 32,

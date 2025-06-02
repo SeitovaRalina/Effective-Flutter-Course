@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+
+import '../../../common/extensions/context_extensions.dart';
 import '../../../theme/app_colors.dart';
-import '../data/category_repository.dart';
-import '../data/menu_repository.dart';
+import '../../order/bloc/order_bloc.dart';
+import '../../order/view/order_screen.dart';
+import '../bloc/menu_bloc.dart';
+import '../models/menu_item.dart';
+import '../models/menu_category.dart';
 import 'widgets/menu_item_card.dart';
 
 class MenuScreen extends StatefulWidget {
@@ -12,73 +19,76 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  final ScrollController _verticalScrollController = ScrollController();
+  final ItemScrollController _verticalScrollController = ItemScrollController();
+  final ItemPositionsListener _verticalScrollListener =
+      ItemPositionsListener.create();
+
   final ScrollController _horizontalScrollController = ScrollController();
-  final Map<int, GlobalKey> _categorySliverKeys = {};
   final Map<int, GlobalKey> _categoryButtonKeys = {};
-  bool _isJumpingToCategory = false;
 
   int _activeCategory = 0;
+
+  List<MenuCategory> get _categories =>
+      context.read<MenuBloc>().state.categories ?? [];
+
+  List<MenuItem> get _items => context.read<MenuBloc>().state.items ?? [];
 
   @override
   void initState() {
     super.initState();
-    for (var category in categories) {
-      _categorySliverKeys[category.id] = GlobalKey();
-      _categoryButtonKeys[category.id] = GlobalKey();
-    }
-    _verticalScrollController.addListener(_onMenuScroll);
+    final bloc = context.read<MenuBloc>();
+    bloc.add(const LoadCategoriesEvent());
+    bloc.stream.firstWhere((s) => s is IdleMenuState).then((_) {
+      bloc.add(const LoadPageEvent());
+    });
+    _verticalScrollListener.itemPositions
+        .addListener(_updateActiveCategoryOnScroll);
   }
 
   @override
   void dispose() {
-    _verticalScrollController.dispose();
+    _verticalScrollListener.itemPositions
+        .removeListener(_updateActiveCategoryOnScroll);
     _horizontalScrollController.dispose();
     super.dispose();
   }
 
-  void _onMenuScroll() {
-    if (_isJumpingToCategory) return;
+  void _updateActiveCategoryOnScroll() {
+    final positions = _verticalScrollListener.itemPositions.value;
+    if (positions.isEmpty) return;
 
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final Offset offset = renderBox.localToGlobal(Offset.zero);
-    final double visibleTopEdge = offset.dy;
-    final double visibleBottomEdge = offset.dy + renderBox.size.height;
+    final firstVisibleIndex = positions.first.index;
+    final newCategoryId = _categories[firstVisibleIndex].id;
+    if (newCategoryId != _activeCategory) {
+      _scrollActiveCategoryButtonToStart(newCategoryId);
+    }
 
-    for (final category in categories) {
-      final sectionKey = _categorySliverKeys[category.id];
-      final sectionRenderBox =
-          sectionKey?.currentContext?.findRenderObject() as RenderBox?;
+    bool isLastVisibleItem =
+        positions.any((e) => e.itemTrailingEdge > 0.8 || e.itemLeadingEdge > 0);
+    final nextItems =
+        _items.where((e) => e.category.id == _activeCategory + 1).toList();
 
-      if (sectionRenderBox != null) {
-        final categoryOffset = sectionRenderBox.localToGlobal(Offset.zero).dy;
-
-        if (categoryOffset >= visibleTopEdge &&
-            categoryOffset < visibleBottomEdge) {
-          _scrollCategoryButtonToStart(category.id);
-          break;
-        }
-      }
+    if (isLastVisibleItem && nextItems.isEmpty) {
+      context.read<MenuBloc>().add(const LoadPageEvent());
     }
   }
 
   void _scrollToCategory(int categoryId) async {
-    final keyContext = _categorySliverKeys[categoryId]?.currentContext;
-    if (keyContext != null) {
-      _isJumpingToCategory = true;
-      Scrollable.ensureVisible(
-        keyContext,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-      _scrollCategoryButtonToStart(categoryId);
+    final index = _categories.indexWhere((c) => c.id == categoryId);
+    if (index == -1) return;
 
-      await Future.delayed(const Duration(milliseconds: 400));
-      _isJumpingToCategory = false;
-    }
+    await _verticalScrollController.scrollTo(
+      index: index,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+
+    _scrollActiveCategoryButtonToStart(categoryId);
+
+    await Future.delayed(const Duration(milliseconds: 300));
   }
 
-  void _scrollCategoryButtonToStart(int categoryId) {
+  void _scrollActiveCategoryButtonToStart(int categoryId) {
     setState(() {
       _activeCategory = categoryId;
     });
@@ -102,90 +112,137 @@ class _MenuScreenState extends State<MenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          surfaceTintColor: AppColors.background,
-          titleSpacing: 0,
-          title: SizedBox(
-            height: 36,
-            child: ListView.builder(
-              controller: _horizontalScrollController,
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final isActive = category.id == _activeCategory;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: TextButton(
-                    key: _categoryButtonKeys[category.id],
-                    onPressed: () => _scrollToCategory(category.id),
-                    style: TextButton.styleFrom(
-                      backgroundColor:
-                          isActive ? AppColors.blue : AppColors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      padding: const EdgeInsets.all(8.0),
-                    ),
-                    child: Text(
-                      category.name,
-                      style: TextStyle(
-                        color: isActive ? AppColors.white : AppColors.black,
+    return BlocBuilder<MenuBloc, MenuState>(
+      buildWhen: (previous, current) => current is! IdleMenuState,
+      builder: (context, state) {
+        return switch (state) {
+          ProgressMenuState() when _categories.isEmpty =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
+          ErrorMenuState() => Scaffold(
+                body: Center(
+              child: Text(
+                context.l10n.dataLoadFailure,
+                style: context.textTheme.titleMedium,
+              ),
+            )),
+          _ => (() {
+              for (final category in _categories) {
+                _categoryButtonKeys.putIfAbsent(category.id, () => GlobalKey());
+              }
+              return SafeArea(
+                child: Scaffold(
+                  appBar: AppBar(
+                    backgroundColor: AppColors.background,
+                    surfaceTintColor: AppColors.background,
+                    titleSpacing: 0,
+                    title: SizedBox(
+                      height: 36,
+                      child: ListView.builder(
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categories.length,
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          final isActive = category.id == _activeCategory;
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: TextButton(
+                              key: _categoryButtonKeys[category.id],
+                              onPressed: () => _scrollToCategory(category.id),
+                              style: TextButton.styleFrom(
+                                backgroundColor:
+                                    isActive ? AppColors.blue : AppColors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding: const EdgeInsets.all(8.0),
+                              ),
+                              child: Text(
+                                category.name,
+                                style: TextStyle(
+                                  color: isActive
+                                      ? AppColors.white
+                                      : AppColors.black,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-        ),
-        body: NotificationListener<ScrollUpdateNotification>(
-          onNotification: (_) {
-            _onMenuScroll();
-            return true;
-          },
-          child: CustomScrollView(
-            controller: _verticalScrollController,
-            slivers: [
-              for (var category in categories) ...[
-                SliverToBoxAdapter(
-                  child: Container(
-                    key: _categorySliverKeys[
-                        category.id],
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(category.name,
-                        style: Theme.of(context).textTheme.headlineLarge),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final items = menuItems
-                          .where((item) => item.category == category)
+                  body: ScrollablePositionedList.builder(
+                    itemScrollController: _verticalScrollController,
+                    itemPositionsListener: _verticalScrollListener,
+                    itemCount: _categories.length,
+                    itemBuilder: (context, index) {
+                      final category = _categories[index];
+                      final categoryItems = _items
+                          .where((item) => item.category.id == category.id)
                           .toList();
-                      return MenuItemCard(item: items[index]);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              category.name,
+                              style: context.textTheme.headlineLarge,
+                            ),
+                          ),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: categoryItems.length,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              mainAxisExtent: 210,
+                            ),
+                            itemBuilder: (context, itemIndex) {
+                              return MenuItemCard(
+                                  item: categoryItems[itemIndex]);
+                            },
+                          ),
+                        ],
+                      );
                     },
-                        childCount: menuItems
-                            .where((item) => item.category == category)
-                            .length),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      mainAxisExtent: 210,
-                    ),
+                  ),
+                  floatingActionButton: BlocBuilder<OrderBloc, OrderState>(
+                    builder: (context, state) {
+                      if (state.totalPrice == 0) return const SizedBox.shrink();
+                      return FloatingActionButton.extended(
+                        onPressed: () {
+                          showModalBottomSheet<void>(
+                              isScrollControlled: true,
+                              context: context,
+                              builder: (_) => BlocProvider.value(
+                                    value: context.read<OrderBloc>(),
+                                    child: const OrderScreen(),
+                                  ));
+                        },
+                        backgroundColor: AppColors.blue,
+                        label: Text(
+                          context.l10n.price(state.totalPrice),
+                          style: context.textTheme.titleSmall?.copyWith(
+                            color: AppColors.white,
+                          ),
+                        ),
+                        icon: const Icon(Icons.local_mall,
+                            color: AppColors.white),
+                      );
+                    },
                   ),
                 ),
-              ],
-            ],
-          ),
-        ),
-      ),
+              );
+            })()
+        };
+      },
     );
   }
 }
