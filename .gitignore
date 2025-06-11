@@ -45,3 +45,6 @@ app.*.map.json
 
 # Localization files generated automatically
 lib/src/localization/generated/
+
+# Secrets
+.env

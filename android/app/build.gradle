@@ -5,6 +5,9 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+Project flutter_env_native = project(':flutter_env_native')
+apply from: "${flutter_env_native.projectDir}/envConfig.gradle"
+
 android {
     namespace = "com.example.effective_flutter_course"
     compileSdk = flutter.compileSdkVersion
@@ -28,6 +31,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        resValue "string", "ymaps_api_key", YMAPS_API_KEY ?: ''
+        buildConfigField "String", "YMAPS_API_KEY", "\"${YMAPS_API_KEY ?: ''}\""
     }
 
     buildTypes {
@@ -37,8 +42,16 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation 'com.yandex.android:maps.mobile:4.6.1-lite'
 }
