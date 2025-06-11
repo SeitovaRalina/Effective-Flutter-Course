@@ -4,4 +4,5 @@ sealed class ImageSources {
   static const coffeeWithMilk = 'assets/images/coffee_with_milk.png';
   static const tea = 'assets/images/tea.png';
   static const authorsDrink = 'assets/images/authors_drink.png';
+  static const mapPoint = 'assets/images/map_point.png';
 }
