@@ -37,7 +37,16 @@ class MenuItemPrices extends Table {
   Set<Column> get primaryKey => {itemId, currency};
 }
 
-@DriftDatabase(tables: [MenuCategories, MenuItems, MenuItemPrices])
+class Locations extends Table {
+  TextColumn get address => text()();
+  RealColumn get lat => real()();
+  RealColumn get lng => real()();
+
+  @override
+  Set<Column> get primaryKey => {address};
+}
+
+@DriftDatabase(tables: [MenuCategories, MenuItems, MenuItemPrices, Locations])
 class MenuDb extends _$MenuDb {
   MenuDb() : super(_openConnection());
 
