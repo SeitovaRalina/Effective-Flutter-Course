@@ -4,8 +4,15 @@ class Location {
   final double lng;
 
   const Location({
-    required this.address,
+    this.address = '',
     required this.lat,
     required this.lng,
+  });
+}
+
+class OmskLocation extends Location {
+  const OmskLocation({
+    super.lat = 54.9924,
+    super.lng = 73.3686,
   });
 }

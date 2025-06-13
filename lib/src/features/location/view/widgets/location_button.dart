@@ -63,11 +63,8 @@ class LocationButton extends StatelessWidget {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: context.read<MapBloc>()),
-            BlocProvider.value(value: context.read<LocationBloc>()),
-          ],
+        builder: (_) => BlocProvider.value(
+          value: context.read<MapBloc>(),
           child: const MapScreen(),
         ),
       ),

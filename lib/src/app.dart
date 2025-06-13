@@ -5,7 +5,6 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'common/database/database.dart';
-import 'features/location/bloc/location/location_bloc.dart';
 import 'features/location/bloc/map/map_bloc.dart';
 import 'features/location/data/data_sources/locations_data_source.dart';
 import 'features/location/data/data_sources/savable_locations_data_source.dart';
@@ -106,10 +105,6 @@ class CoffeeShop extends StatelessWidget {
               create: (context) => MapBloc(
                 locationsRepository: context.read<ILocationsRepository>(),
               )..add(const LoadLocationsEvent()),
-            ),
-            BlocProvider(
-              create: (context) => LocationBloc()..add(RequestLocationEvent()),
-              lazy: false,
             ),
           ],
           child: const MenuScreen(),
