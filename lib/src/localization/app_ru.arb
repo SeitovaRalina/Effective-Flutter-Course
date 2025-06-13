@@ -5,5 +5,10 @@
     "orderSuccess": "Заказ создан",
     "orderFailure": "Возникла ошибка при заказе",
     "makeOrder": "Оформить заказ",
-    "dataLoadFailure": "Ошибка загрузки данных"
+    "dataLoadFailure": "Ошибка загрузки данных",
+    "noLocation": "Локация не определена",
+    "noLocationPermission": "Нет разрешений для доступа к локации",
+    "gpsDisabled": "Геолокация отключена, включите GPS",
+    "ourCoffeeShops": "Наши кофейни",
+    "choose": "Выбрать"
 }

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../common/extensions/context_extensions.dart';
-import '../../bloc/location/location_bloc.dart';
 import '../../bloc/map/map_bloc.dart';
 import '../map_screen.dart';
 
@@ -15,45 +14,33 @@ class LocationButton extends StatelessWidget {
     return BlocBuilder<MapBloc, MapState>(
       buildWhen: (previous, current) => current is! IdleMapState,
       builder: (context, state) {
-        final currentLocation = state.currentLocation;
+        final location = state.currentLocation;
+
         return SizedBox(
           height: 40,
-          child: currentLocation != null
-              ? InkWell(
-                  onTap: () => {_navigateToMap(context)},
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        color: AppColors.blue,
-                        size: 24,
-                      ),
-                      Text(
-                        currentLocation.address,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                    ],
-                  ),
-                )
-              : InkWell(
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.location_off_outlined,
-                        color: AppColors.blue,
-                        size: 24,
-                      ),
-                      Text(
-                        context.l10n.noLocation,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                    ],
+          child: InkWell(
+            onTap: () => {_navigateToMap(context)},
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, right: 10),
+                  child: Icon(
+                    location != null
+                        ? Icons.location_on_outlined
+                        : Icons.location_off_outlined,
+                    color: AppColors.blue,
+                    size: 24,
                   ),
                 ),
+                Text(
+                  location?.address ?? context.l10n.noLocation,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
