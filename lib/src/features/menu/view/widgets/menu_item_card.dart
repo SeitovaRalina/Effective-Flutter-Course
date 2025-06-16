@@ -140,34 +140,3 @@ class MenuItemCard extends StatelessWidget {
     );
   }
 }
-
-class QuantityIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  const QuantityIconButton({
-    super.key,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 24,
-      width: 24,
-      child: Ink(
-        decoration: const ShapeDecoration(
-          color: AppColors.blue,
-          shape: CircleBorder(),
-        ),
-        child: IconButton(
-          onPressed: onPressed,
-          icon: Icon(icon, size: 9),
-          color: AppColors.white,
-          padding: EdgeInsets.zero,
-        ),
-      ),
-    );
-  }
-}

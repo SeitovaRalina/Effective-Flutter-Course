@@ -20,37 +20,25 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   late final LocationService _locationService;
   YandexMapController? _mapController;
+  bool _permissionChecked = false;
 
   @override
   void initState() {
     super.initState();
     _locationService = LocationService();
-  }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initPermission());
   }
 
   Future<void> _initPermission() async {
+    if (_permissionChecked) return;
+    _permissionChecked = true;
+
     bool hasPermission = await _locationService.checkPermission();
     if (!hasPermission) {
       hasPermission = await _locationService.requestPermission();
       if (!hasPermission) {
         if (!mounted) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.scaffoldMessenger.showSnackBar(
-            SnackBar(
-              duration: const Duration(seconds: 2),
-              content: Text(
-                context.l10n.noLocationPermission,
-                style: context.textTheme.titleLarge
-                    ?.copyWith(color: AppColors.white),
-              ),
-            ),
-          );
-        });
+        _showSnackBar(context.l10n.noLocationPermission);
         return;
       }
     }
@@ -58,18 +46,8 @@ class _MapScreenState extends State<MapScreen> {
     final hasService = await _locationService.isServiceEnabled();
     if (!hasService) {
       if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.scaffoldMessenger.showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 2),
-            content: Text(
-              context.l10n.gpsDisabled,
-              style: context.textTheme.titleLarge
-                  ?.copyWith(color: AppColors.white),
-            ),
-          ),
-        );
-      });
+      _showSnackBar(context.l10n.gpsDisabled);
+      return;
     }
 
     final location = await LocationService().getCurrentLocation();
@@ -77,7 +55,6 @@ class _MapScreenState extends State<MapScreen> {
     if (!mounted || _mapController == null) return;
 
     await _mapController!.toggleUserLayer(visible: true);
-
     await _mapController!.moveCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
@@ -91,6 +68,18 @@ class _MapScreenState extends State<MapScreen> {
       animation: const MapAnimation(
         type: MapAnimationType.linear,
         duration: 0.3,
+      ),
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 2),
+        content: Text(
+          message,
+          style: context.textTheme.titleLarge?.copyWith(color: AppColors.white),
+        ),
       ),
     );
   }
@@ -114,8 +103,6 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           );
-
-          await _initPermission();
         },
         mapObjects: _getPlacemarkObjects(context),
         onUserLocationAdded: (view) async {

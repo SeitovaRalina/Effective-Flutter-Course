@@ -15,59 +15,71 @@ class LocationsList extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: Column(
-          children: [
-            SizedBox(
-              height: 52,
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 24),
-                    child: InkWell(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        size: 20,
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 52,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 14),
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            size: 20,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    context.l10n.ourCoffeeShops,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                ],
-              ),
-            ),
-            const Divider(color: AppColors.divider),
-            Expanded(
-              child: ListView.separated(
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: locations.length,
-                itemBuilder: (context, index) {
-                  final location = locations[index];
-                  return ListTile(
-                    title: Text(
-                      location.address,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Text(
+                      context.l10n.ourCoffeeShops,
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    trailing: const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 18,
-                    ),
-                    onTap: () {
-                      context.read<MapBloc>().add(
-                            ChangeLocationEvent(location: location),
-                          );
-                      Navigator.of(context)
-                        ..pop(location)
-                        ..pop(location);
-                    },
-                  );
-                },
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  ],
+                ),
               ),
-            ),
-          ],
+              const Divider(color: AppColors.divider),
+              Expanded(
+                child: ListView.separated(
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: locations.length,
+                  itemBuilder: (context, index) {
+                    final location = locations[index];
+                    return SizedBox(
+                      height: 40,
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          location.address,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 18,
+                        ),
+                        onTap: () {
+                          context.read<MapBloc>().add(
+                                ChangeLocationEvent(location: location),
+                              );
+                          Navigator.of(context)
+                            ..pop(location)
+                            ..pop(location);
+                        },
+                      ),
+                    );
+                  },
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
