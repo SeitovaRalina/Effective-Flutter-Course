@@ -4,11 +4,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'common/database/database.dart';
 import 'features/menu/bloc/menu_bloc.dart';
-
 import 'features/menu/data/category_repository.dart';
 import 'features/menu/data/data_sources/categories_data_source.dart';
 import 'features/menu/data/data_sources/menu_data_source.dart';
+import 'features/menu/data/data_sources/savable_categories_data_source.dart';
+import 'features/menu/data/data_sources/savable_menu_data_source.dart';
 import 'features/menu/data/menu_repository.dart';
 import 'features/menu/view/menu_screen.dart';
 import 'features/order/bloc/order_bloc.dart';
@@ -28,6 +30,8 @@ class CoffeeShop extends StatelessWidget {
     ),
   );
 
+  static final menuDb = MenuDb();
+
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
@@ -37,12 +41,18 @@ class CoffeeShop extends StatelessWidget {
             networkCategoriesDataSource: NetworkCategoriesDataSource(
               dio: dioClient,
             ),
+            dbCategoriesDataSource: DbCategoriesDataSource(
+              menuDb: menuDb,
+            ),
           ),
         ),
         RepositoryProvider<IMenuRepository>(
           create: (_) => MenuRepository(
             networkMenuDataSource: NetworkMenuDataSource(
               dio: dioClient,
+            ),
+            dbMenuDataSource: DbMenuDataSource(
+              menuDb: menuDb,
             ),
           ),
         ),
