@@ -38,16 +38,18 @@ class _MapScreenState extends State<MapScreen> {
       hasPermission = await _locationService.requestPermission();
       if (!hasPermission) {
         if (!mounted) return;
-        _showSnackBar(context.l10n.noLocationPermission);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text(
+              context.l10n.noLocationAccess,
+              style: context.textTheme.titleLarge
+                  ?.copyWith(color: AppColors.white),
+            ),
+          ),
+        );
         return;
       }
-    }
-
-    final hasService = await _locationService.isServiceEnabled();
-    if (!hasService) {
-      if (!mounted) return;
-      _showSnackBar(context.l10n.gpsDisabled);
-      return;
     }
 
     final location = await LocationService().getCurrentLocation();
@@ -68,18 +70,6 @@ class _MapScreenState extends State<MapScreen> {
       animation: const MapAnimation(
         type: MapAnimationType.linear,
         duration: 0.3,
-      ),
-    );
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 2),
-        content: Text(
-          message,
-          style: context.textTheme.titleLarge?.copyWith(color: AppColors.white),
-        ),
       ),
     );
   }

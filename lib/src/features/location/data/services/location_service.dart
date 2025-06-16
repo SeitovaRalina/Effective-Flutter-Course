@@ -6,7 +6,6 @@ abstract interface class ILocationService {
   Future<Location> getCurrentLocation();
   Future<bool> requestPermission();
   Future<bool> checkPermission();
-  Future<bool> isServiceEnabled();
 }
 
 class LocationService implements ILocationService {
@@ -37,10 +36,5 @@ class LocationService implements ILocationService {
             value == LocationPermission.always ||
             value == LocationPermission.whileInUse)
         .catchError((_) => false);
-  }
-
-  @override
-  Future<bool> isServiceEnabled() {
-    return Geolocator.isLocationServiceEnabled();
   }
 }

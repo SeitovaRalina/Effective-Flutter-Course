@@ -7,8 +7,7 @@
     "makeOrder": "Оформить заказ",
     "dataLoadFailure": "Ошибка загрузки данных",
     "noLocation": "Локация не определена",
-    "noLocationPermission": "Нет разрешений для доступа к локации",
-    "gpsDisabled": "Геолокация отключена, включите GPS",
+    "noLocationAccess": "Нет доступа к локации",
     "ourCoffeeShops": "Наши кофейни",
     "choose": "Выбрать"
 }
