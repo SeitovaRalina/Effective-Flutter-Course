@@ -5,6 +5,11 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'common/database/database.dart';
+import 'features/location/bloc/location/location_bloc.dart';
+import 'features/location/bloc/map/map_bloc.dart';
+import 'features/location/data/data_sources/locations_data_source.dart';
+import 'features/location/data/data_sources/savable_locations_data_source.dart';
+import 'features/location/data/locations_repository.dart';
 import 'features/menu/bloc/menu_bloc.dart';
 import 'features/menu/data/category_repository.dart';
 import 'features/menu/data/data_sources/categories_data_source.dart';
@@ -63,6 +68,13 @@ class CoffeeShop extends StatelessWidget {
             ),
           ),
         ),
+        RepositoryProvider<ILocationsRepository>(
+          create: (context) => LocationsRepository(
+            networkLocationsDataSource:
+                NetworkLocationsDataSource(dio: dioClient),
+            dbLocationsDataSource: DbLocationsDataSource(menuDb: menuDb),
+          ),
+        )
       ],
       child: MaterialApp(
         locale: DevicePreview.locale(context),
@@ -89,6 +101,14 @@ class CoffeeShop extends StatelessWidget {
               create: (context) => OrderBloc(
                 orderRepository: context.read<IOrderRepository>(),
               ),
+            ),
+            BlocProvider(
+              create: (context) => MapBloc(
+                locationsRepository: context.read<ILocationsRepository>(),
+              )..add(const LoadLocationsEvent()),
+            ),
+            BlocProvider(
+              create: (context) => LocationBloc(),
             )
           ],
           child: const MenuScreen(),

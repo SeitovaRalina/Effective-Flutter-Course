@@ -4,6 +4,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../common/extensions/context_extensions.dart';
 import '../../../theme/app_colors.dart';
+import '../../location/view/widgets/location_button.dart';
 import '../../order/bloc/order_bloc.dart';
 import '../../order/view/order_screen.dart';
 import '../bloc/menu_bloc.dart';
@@ -131,45 +132,53 @@ class _MenuScreenState extends State<MenuScreen> {
               }
               return SafeArea(
                 child: Scaffold(
-                  appBar: AppBar(
-                    backgroundColor: AppColors.background,
-                    surfaceTintColor: AppColors.background,
-                    titleSpacing: 0,
-                    title: SizedBox(
-                      height: 36,
-                      child: ListView.builder(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _categories.length,
-                        itemBuilder: (context, index) {
-                          final category = _categories[index];
-                          final isActive = category.id == _activeCategory;
-                          return Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: TextButton(
-                              key: _categoryButtonKeys[category.id],
-                              onPressed: () => _scrollToCategory(category.id),
-                              style: TextButton.styleFrom(
-                                backgroundColor:
-                                    isActive ? AppColors.blue : AppColors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                  appBar: PreferredSize(
+                    preferredSize: const Size.fromHeight(92),
+                    child: Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: LocationButton(),
+                        ),
+                        SizedBox(
+                          height: 36,
+                          child: ListView.builder(
+                            controller: _horizontalScrollController,
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _categories.length,
+                            itemBuilder: (context, index) {
+                              final category = _categories[index];
+                              final isActive = category.id == _activeCategory;
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4.0),
+                                child: TextButton(
+                                  key: _categoryButtonKeys[category.id],
+                                  onPressed: () =>
+                                      _scrollToCategory(category.id),
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: isActive
+                                        ? AppColors.blue
+                                        : AppColors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    padding: const EdgeInsets.all(8.0),
+                                  ),
+                                  child: Text(
+                                    category.name,
+                                    style: TextStyle(
+                                      color: isActive
+                                          ? AppColors.white
+                                          : AppColors.black,
+                                    ),
+                                  ),
                                 ),
-                                padding: const EdgeInsets.all(8.0),
-                              ),
-                              child: Text(
-                                category.name,
-                                style: TextStyle(
-                                  color: isActive
-                                      ? AppColors.white
-                                      : AppColors.black,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   body: ScrollablePositionedList.builder(

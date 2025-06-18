@@ -12,6 +12,7 @@ import 'src/theme/app_colors.dart';
 
 void main() {
   Bloc.observer = const BaseObserver();
+  WidgetsFlutterBinding.ensureInitialized();
   runZonedGuarded(
       () => runApp(
             DevicePreview(
