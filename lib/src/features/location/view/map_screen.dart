@@ -5,8 +5,8 @@ import 'package:yandex_mapkit/yandex_mapkit.dart';
 
 import '../../../theme/app_colors.dart';
 import '../../../theme/image_sources.dart';
+import '../bloc/location/location_bloc.dart';
 import '../bloc/map/map_bloc.dart';
-import '../data/services/location_service.dart';
 import '../models/location.dart';
 import 'widgets/locations_list.dart';
 
@@ -18,90 +18,76 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  late final LocationService _locationService;
   YandexMapController? _mapController;
-  bool _permissionChecked = false;
 
   @override
   void initState() {
     super.initState();
-    _locationService = LocationService();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initPermission());
-  }
-
-  Future<void> _initPermission() async {
-    if (_permissionChecked) return;
-    _permissionChecked = true;
-
-    bool hasPermission = await _locationService.checkPermission();
-    if (!hasPermission) {
-      hasPermission = await _locationService.requestPermission();
-      if (!hasPermission) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 2),
-            content: Text(
-              context.l10n.noLocationAccess,
-              style: context.textTheme.titleLarge
-                  ?.copyWith(color: AppColors.white),
-            ),
-          ),
-        );
-        return;
-      }
-    }
-
-    final location = await LocationService().getCurrentLocation();
-
-    if (!mounted || _mapController == null) return;
-
-    await _mapController!.toggleUserLayer(visible: true);
-    await _mapController!.moveCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: Point(
-            latitude: location.lat,
-            longitude: location.lng,
-          ),
-          zoom: 13,
-        ),
-      ),
-      animation: const MapAnimation(
-        type: MapAnimationType.linear,
-        duration: 0.3,
-      ),
-    );
+    context.read<LocationBloc>().add(const InitLocationEvent());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: YandexMap(
-        onMapCreated: (controller) async {
-          _mapController = controller;
-
-          const defPosition = OmskLocation();
-          await controller.moveCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: Point(
-                  latitude: defPosition.lat,
-                  longitude: defPosition.lng,
+      body: BlocListener<LocationBloc, LocationState>(
+        listener: (context, state) async {
+          if (state is ErrorLocationState) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 2),
+                content: Text(
+                  context.l10n.noLocationAccess,
+                  style: context.textTheme.titleLarge
+                      ?.copyWith(color: AppColors.white),
                 ),
-                zoom: 10,
               ),
-            ),
-          );
+            );
+          } else if (state is SuccessfulLocationState &&
+              _mapController != null) {
+            await _mapController!.toggleUserLayer(visible: true);
+            await _mapController!.moveCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  target: Point(
+                    latitude: state.location!.lat,
+                    longitude: state.location!.lng,
+                  ),
+                  zoom: 13,
+                ),
+              ),
+              animation: const MapAnimation(
+                type: MapAnimationType.linear,
+                duration: 0.3,
+              ),
+            );
+          }
         },
-        mapObjects: _getPlacemarkObjects(context),
-        onUserLocationAdded: (view) async {
-          return view.copyWith(
-            pin: view.pin.copyWith(
-              opacity: 1,
-            ),
-          );
-        },
+        child: YandexMap(
+          onMapCreated: (controller) async {
+            _mapController = controller;
+
+            const defPosition = OmskLocation();
+            await controller.moveCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  target: Point(
+                    latitude: defPosition.lat,
+                    longitude: defPosition.lng,
+                  ),
+                  zoom: 10,
+                ),
+              ),
+            );
+          },
+          mapObjects: _getPlacemarkObjects(context),
+          onUserLocationAdded: (view) async {
+            return view.copyWith(
+              pin: view.pin.copyWith(
+                opacity: 1,
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../common/extensions/context_extensions.dart';
+import '../../bloc/location/location_bloc.dart';
 import '../../bloc/map/map_bloc.dart';
 import '../map_screen.dart';
 
@@ -50,8 +51,12 @@ class LocationButton extends StatelessWidget {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<MapBloc>(),
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider<MapBloc>.value(value: context.read<MapBloc>()),
+            BlocProvider<LocationBloc>.value(
+                value: context.read<LocationBloc>()),
+          ],
           child: const MapScreen(),
         ),
       ),
